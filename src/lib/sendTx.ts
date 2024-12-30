@@ -4,6 +4,7 @@ import { PublicKey,Connection,VersionedTransaction
 import bs58 from "bs58";
 import { createLogger } from "./logger.js";
 import { DB } from "./db.js";
+import { WebSocketClient } from "./ws.js";
 
 // 日志
 const logger = createLogger({service: "sendTx"});
@@ -18,25 +19,26 @@ await db.createTable({
       'id INT AUTO_INCREMENT PRIMARY KEY',
       'signature varchar(128) not null',
       'startSlot INT not null',
-      'rpc varchar(64)',
+      'rpc varchar(255)',
     ]
   });
 
 // 发送交易到rpc
-export async function sendTxToRpc(tx:VersionedTransaction,connection:Connection,slot:number,name:string) {
+export async function sendTxToRpc(tx:VersionedTransaction,connection:Connection,ws:WebSocketClient,slot:number,name:string) {
     try {
         let start = new Date().getTime();
         await connection.sendRawTransaction(tx.serialize(), {
             skipPreflight: true,
             maxRetries: 0
-        }).then((resp) => {
+        }).then(async (resp) => {
             logger.info(`${name} sendTxToRpc: ${resp}`)
             logger.info(`${name} sendTxToRpc time cost: ${new Date().getTime() - start}ms`)
-            db.insertData({
+            await db.insertData({
                 tableName: "sendTxTs",
                 fields: ['signature', 'startSlot', 'rpc'],
                 values: [resp, slot, connection.rpcEndpoint]
             })
+            ws.subscribeSignature(resp)
         })
     } catch (err) {
         logger.error(`${name} sendTxToRpc error: ${err}`)
@@ -62,11 +64,6 @@ export async function sendTxToBundle(tx:VersionedTransaction,bundle_api:string,s
         }).then((resp) => {
             logger.info(`${name} sendTxToBundle: ${resp.data.result}`)
             logger.info(`${name} sendTxToBundle time cost: ${new Date().getTime() - start}ms`)
-            db.insertData({
-                tableName: "sendTxTs",
-                fields: ['signature', 'startSlot', 'rpc'],
-                values: [resp.data.result, slot, bundle_api]
-            })
         })
     } catch (err) {
         logger.error(`${name} sendTxToBundle error: ${err}`)

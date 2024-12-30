@@ -13,7 +13,7 @@ export const normalConfig = { // 一般配置
     maxTolerantSlotNum: 3, // 最大可接受的报价contextSlot与latestSlot的差距
     maxTolerantSlotDiffNum: 3, // 最大可接受的两个报价的contextSlot的差距
     partformFeeBps: 0, // 平台手续费,单位为0.01%
-    minProfitBps: 20, // 最小利润，单位为0.01%
+    minProfitBps: -5000, // 最小利润，单位为0.01%
     minJitoTip: 0.0001 * LAMPORTS_PER_SOL, // 最小jito tip
     jitoFeePercentage: 0, // jito手续费百分比
     computeUnitBudget: 199999, // 计算单元预算
