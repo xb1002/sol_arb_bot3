@@ -5,6 +5,7 @@ export const normalConfig = { // 一般配置
     loggerLevel: "debug", // 日志级别
     commitment: "confirmed" as Commitment, // 交易确认级别
     showWaitAndNextRound: false, // 是否显示等待和下一轮
+    deleteTableWhenStart: false, // 开始时是否删除表
     waitTimePerRound: 0.35 * 1000, // 每一轮间隔时间
     txMutilpler : 1, // 当发现套利机会时提出交易的次数
     maxAddressLookupTableNum: 200, // 保存最大地址查找表数量

@@ -5,6 +5,7 @@ import bs58 from "bs58";
 import { createLogger } from "./logger.js";
 import { DB } from "./db.js";
 import { WebSocketClient } from "./ws.js";
+import { normalConfig } from "../config.js";
 
 // 日志
 const logger = createLogger({service: "sendTx"});
@@ -12,7 +13,9 @@ const logger = createLogger({service: "sendTx"});
 // 数据库配置
 // 数据库配置
 const db = new DB();
-await db.deleteTable('sendTxTs');
+if (normalConfig.deleteTableWhenStart) {
+    await db.deleteTable('sendTxTs');
+}
 await db.createTable({
     tableName: "sendTxTs",
     fields: [

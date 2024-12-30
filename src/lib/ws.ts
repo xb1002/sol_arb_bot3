@@ -2,6 +2,7 @@ import WebSocket from 'ws';
 import { createLogger } from './logger.js';
 import { wsConfig } from '../config.js';
 import { DB } from './db.js';
+import { normalConfig } from '../config.js';
 
 // 创建logger
 const logger = createLogger({ service: "wsTs" });
@@ -11,7 +12,9 @@ const { commitment, enableReceivedNotification, maxSubscriptionTime } = wsConfig
 
 // 创建数据库实例
 const db = new DB();
-await db.deleteTable('wsTs');
+if (normalConfig.deleteTableWhenStart){
+    await db.deleteTable('wsTs');
+}
 await db.createTable({
     tableName: 'wsTs',
     fields: [
@@ -20,6 +23,10 @@ await db.createTable({
         'landSlot INT',
         'status varchar(32)',
     ]
+})
+// 获取当前数据库中的最新的id
+let currentId = await db.customQuery('SELECT MAX(id) FROM wsTs').then((res) => {
+    return (res as any)[0]['MAX(id)'] || 0;
 })
 
 const dropTagThreshold = 2;
@@ -129,7 +136,7 @@ export class WebSocketClient {
     private ws: WebSocket;
     private wsUrl: string;
     public subscriptionData: SubscriptionDataItem[] = [];
-    private id: number = 0;
+    private id: number = currentId + 1;
 
     constructor(wsUrl: string) {
         this.wsUrl = wsUrl;
