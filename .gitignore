@@ -1,0 +1,7 @@
+dist/
+node_modules/
+.env
+package-lock.json
+logs/
+.vscode/
+trade_pairs.json
