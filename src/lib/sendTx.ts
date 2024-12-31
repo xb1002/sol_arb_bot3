@@ -23,11 +23,14 @@ await db.createTable({
       'signature varchar(128) not null',
       'startSlot INT not null',
       'rpc varchar(255)',
+      'quote0Slot INT',
+      'quote1Slot INT'
     ]
   });
 
 // 发送交易到rpc
-export async function sendTxToRpc(tx:VersionedTransaction,connection:Connection,ws:WebSocketClient,slot:number,name:string) {
+type quoteSlot = number|undefined|null
+export async function sendTxToRpc(tx:VersionedTransaction,connection:Connection,ws:WebSocketClient,slot:number,quote0Slot:quoteSlot,quote1Slot:quoteSlot,name:string) {
     try {
         let start = new Date().getTime();
         await connection.sendRawTransaction(tx.serialize(), {
@@ -36,10 +39,12 @@ export async function sendTxToRpc(tx:VersionedTransaction,connection:Connection,
         }).then(async (resp) => {
             logger.info(`${name} sendTxToRpc: ${resp}`)
             logger.info(`${name} sendTxToRpc time cost: ${new Date().getTime() - start}ms`)
+            if (quote0Slot === undefined) quote0Slot = null
+            if (quote1Slot === undefined) quote1Slot = null
             await db.insertData({
                 tableName: "sendTxTs",
-                fields: ['signature', 'startSlot', 'rpc'],
-                values: [resp, slot, connection.rpcEndpoint]
+                fields: ['signature', 'startSlot', 'rpc', 'quote0Slot', 'quote1Slot'],
+                values: [resp, slot, connection.rpcEndpoint, quote0Slot, quote1Slot]
             })
             ws.subscribeSignature(resp)
         })

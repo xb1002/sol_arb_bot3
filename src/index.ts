@@ -348,7 +348,7 @@ async function monitor(params:monitorParams) {
                           promises.push(sendTxToBundle(txsBundle[i],BundleApis[i%BundleApis.length],latestSlot,`${pair1.symbol}-${pair2.symbol}`));
                       }
                       for (let i=0; i<txsRpc.length; i++) {
-                          promises.push(sendTxToRpc(txsRpc[i],sendTxCons[i%sendTxCons.length],ws,latestSlot,`${pair1.symbol}-${pair2.symbol}`));
+                          promises.push(sendTxToRpc(txsRpc[i],sendTxCons[i%sendTxCons.length],ws,latestSlot,quote0Resp.contextSlot,quote1Resp.contextSlot,`${pair1.symbol}-${pair2.symbol}`));
                       }
                       await Promise.all(promises);
                   } else {
@@ -359,7 +359,7 @@ async function monitor(params:monitorParams) {
                           await Promise.all(promises);
                       } else {
                           for (let i=0; i<txsRpc.length; i++) {
-                              promises.push(sendTxToRpc(txsRpc[i],sendTxCons[i%sendTxCons.length],ws,latestSlot,`${pair1.symbol}-${pair2.symbol}`));
+                              promises.push(sendTxToRpc(txsRpc[i],sendTxCons[i%sendTxCons.length],ws,latestSlot,quote0Resp.contextSlot,quote1Resp.contextSlot,`${pair1.symbol}-${pair2.symbol}`));
                           }
                           await Promise.all(promises);
                       }
