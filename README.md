@@ -1,2 +1,4 @@
-1. 先运行./lib/jupiter
-2. 再把self-host jupiter跑起来
+1. tsc && node ./dist/index/jupiter.js
+2. systemctl start jupiter
+3. journalctl -u jupiter.service -f
+4. pm2 start index 
