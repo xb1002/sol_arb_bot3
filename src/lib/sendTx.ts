@@ -6,9 +6,16 @@ import { createLogger } from "./logger.js";
 import { DB } from "./db.js";
 import { WebSocketClient } from "./ws.js";
 import { normalConfig } from "../config.js";
+import "dotenv/config";
 
 // 日志
 const logger = createLogger({service: "sendTx"});
+
+// 读取环境变量
+const rpcRetryInterval = parseInt(process.env.RPC_RETRY_INTERVAL || "200");
+const rpcRetries = parseInt(process.env.RPC_RETRIES || "1");
+const bundleRetryInterval = parseInt(process.env.BUNDLE_RETRY_INTERVAL || "200");
+const bundleRetries = parseInt(process.env.BUNDLE_RETRIES || "1");
 
 // 数据库配置
 // 数据库配置
@@ -48,6 +55,17 @@ export async function sendTxToRpc(tx:VersionedTransaction,connection:Connection,
             })
             ws.subscribeSignature(resp)
         })
+        for (let i = 0; i < rpcRetries; i++) {
+            await new Promise((resolve) => setTimeout(resolve, rpcRetryInterval))
+            await connection.sendRawTransaction(tx.serialize(), {
+                skipPreflight: true,
+                maxRetries: 0
+            }).then(async (resp) => {
+                logger.info(`retry ${i+1} ${name} sendTxToRpc: ${resp} success`)
+            }).catch(async (err) => {
+                logger.error(`retry ${i+1} ${name} sendTxToRpc error: ${err}`)
+            })
+        }
     } catch (err) {
         logger.error(`${name} sendTxToRpc error: ${err}`)
     }
@@ -73,6 +91,18 @@ export async function sendTxToBundle(tx:VersionedTransaction,bundle_api:string,s
             logger.info(`${name} sendTxToBundle: ${resp.data.result}`)
             logger.info(`${name} sendTxToBundle time cost: ${new Date().getTime() - start}ms`)
         })
+        for (let i = 0; i < bundleRetries; i++) {
+            await new Promise((resolve) => setTimeout(resolve, bundleRetryInterval))
+            axios.post(new URL("api/v1/bundles",bundle_api).href, bundle, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then((resp) => {
+                logger.info(`retry ${i+1} ${name} sendTxToBundle: ${resp.data.result} success`)
+            }).catch((err) => {
+                logger.error(`retry ${i+1} ${name} sendTxToBundle error: ${err}`)
+            })
+        }
     } catch (err) {
         logger.error(`${name} sendTxToBundle error: ${err}`)
     }
